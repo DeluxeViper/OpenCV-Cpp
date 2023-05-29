@@ -9,7 +9,11 @@ using namespace std;
 #include <opencv2/imgproc.hpp>
 using namespace cv;
 
+Mat img;
 int blurAmount = 15;
+bool applyGray = false;
+bool applyBlur = false;
+bool applySobel = false;
 
 // Trackbar call back function
 static void onChange(int pos, void *userInput);
@@ -17,11 +21,50 @@ static void onChange(int pos, void *userInput);
 // Mouse callback
 static void onMouse(int event, int x, int y, int, void *userInput);
 
+// Initialize buttons
+static void createButtons();
+
+void applyFilters() {
+  Mat result;
+  img.copyTo(result);
+
+  if (applyGray) {
+    cvtColor(result, result, COLOR_BGR2GRAY);
+  }
+  if (applyBlur) {
+    blur(result, result, Size(5, 5));
+  }
+  if (applySobel) {
+    Sobel(result, result, CV_8U, 1, 1);
+  }
+  imshow("Lena", result);
+}
+
+void grayCallback(int state, void *userData) {
+  applyGray = true;
+  applyFilters();
+}
+
+void bgrCallback(int state, void *userData) {
+  applyGray = false;
+  applyFilters();
+}
+
+void blurCallback(int state, void *userData) {
+  applyBlur = (bool)state;
+  applyFilters();
+}
+
+void sobelCallback(int state, void *userData) {
+  applySobel = !applySobel;
+  applyFilters();
+}
+
 int main(int argc, const char **argv) {
   // Read images
-  Mat lena = imread("../lena.jpg");
+  img = imread("../lena.jpg");
   // Checking if Lena image has been loaded
-  if (!lena.data) {
+  if (!img.data) {
     cout << "Lena image missing" << endl;
     return -1;
   }
@@ -32,16 +75,23 @@ int main(int argc, const char **argv) {
   // Move window
   moveWindow("Lena", 10, 10);
 
+  // Overlay shows up at the top of the window
+  displayOverlay("Lena", "Overlay 5secs", 5000);
+
+  // Status bar shows up at bottom of window
+  displayStatusBar("Lena", "Statusbar 5secs", 5000);
+
+  createButtons();
   // Show image
-  imshow("Lena", lena);
+  imshow("Lena", img);
 
   // Create a trackbar
-  cv::createTrackbar("Lena", "Lena", &blurAmount, 30, onChange, &lena);
+  cv::createTrackbar("Lena", "Lena", &blurAmount, 30, onChange, &img);
 
-  cv::setMouseCallback("Lena", onMouse, &lena);
+  cv::setMouseCallback("Lena", onMouse, &img);
 
   // Call onChange to init
-  onChange(blurAmount, &lena);
+  onChange(blurAmount, &img);
 
   // Resize window, only non autosize
   resizeWindow("Lena", 512, 512);
@@ -83,4 +133,14 @@ static void onChange(int pos, void *userData) {
   blur(*img, imgBlur, Size(pos, pos));
   // Show result
   imshow("Lena", imgBlur);
+}
+
+static void createButtons() {
+  // create Buttons for the control panel
+  createButton("Blur", blurCallback, NULL, QT_CHECKBOX, 0);
+
+  createButton("Gray", grayCallback, NULL, QT_RADIOBOX, 0);
+  createButton("RGB", bgrCallback, NULL, QT_RADIOBOX, 1);
+
+  createButton("Sobel", sobelCallback, NULL, QT_PUSH_BUTTON, 0);
 }

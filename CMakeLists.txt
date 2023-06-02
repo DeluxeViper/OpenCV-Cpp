@@ -12,6 +12,9 @@ link_directories(${OpenCV_LIB_DIR})
 
 ADD_EXECUTABLE(sample r_w_images.cpp)
 ADD_EXECUTABLE(window window.cpp)
+ADD_EXECUTABLE(opengl opengl_rotate_frame.cpp)
+
+TARGET_LINK_LIBRARIES(opengl ${OpenCV_LIBS})
 TARGET_LINK_LIBRARIES(window ${OpenCV_LIBS})
 TARGET_LINK_LIBRARIES(sample ${OpenCV_LIBS})
 
